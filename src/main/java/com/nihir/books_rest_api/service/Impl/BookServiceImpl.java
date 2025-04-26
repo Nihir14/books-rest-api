@@ -7,6 +7,9 @@ import com.nihir.books_rest_api.service.BookService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Optional;
+
 @Service
 public class BookServiceImpl implements BookService {
 
@@ -15,6 +18,11 @@ public class BookServiceImpl implements BookService {
     @Autowired
     public BookServiceImpl(final BookRepo bookRepo) {
         this.bookRepo = bookRepo;
+    }
+
+    @Override
+    public boolean isBookExists(Book book) {
+        return bookRepo.existsById(book.getIsbn());
     }
 
     @Override
@@ -38,5 +46,26 @@ public class BookServiceImpl implements BookService {
                 .author(book.getAuthor())
                 .title(book.getTitle())
                 .build();
+    }
+
+    public Optional<Book> getBookById(String isbn) {
+        final Optional<BookEntity> foundBook = bookRepo.findById(isbn);
+        return foundBook.map(book ->bookEntityToBook(book));
+    }
+
+    @Override
+    public List<Book> bookList() {
+        List<BookEntity> bookEntities = bookRepo.findAll();
+        return bookEntities.stream()
+                .map(this::bookEntityToBook)
+                .toList();
+    }
+
+    @Override
+    public void deleteBook(String isbn) {
+        final Optional<BookEntity> book = bookRepo.findById(isbn);
+        if (book.isPresent()) {
+            bookRepo.deleteById(isbn);
+        }
     }
 }
